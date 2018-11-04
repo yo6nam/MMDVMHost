@@ -993,6 +993,13 @@ void CDMRSlot::writeEndNet(bool writeEnd)
 
 void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 {
+	unsigned int srcId = dmrData.getSrcId();
+	if (!CDMRAccessControl::validateNetId(srcId)) {
+		std::string src = m_lookup->find(srcId);
+		LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
+		return;
+	}
+
 	if (m_rfState != RS_RF_LISTENING && m_netState == RS_NET_IDLE)
 		return;
 

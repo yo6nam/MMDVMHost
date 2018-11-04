@@ -45,7 +45,15 @@ void CDMRAccessControl::init(const std::vector<unsigned int>& blacklist, const s
 	m_prefixes         = prefixes;
 	m_id               = id;
 }
- 
+
+bool CDMRAccessControl::validateNetId(unsigned int id)
+{
+	if (std::find(m_blackList.begin(), m_blackList.end(), id) != m_blackList.end())
+		return false;
+	
+	return true;
+}
+
 bool CDMRAccessControl::validateSrcId(unsigned int id)
 {
 	if (m_selfOnly) {
