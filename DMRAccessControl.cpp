@@ -28,6 +28,9 @@ std::vector<unsigned int> CDMRAccessControl::m_whiteList;
 
 std::vector<unsigned int> CDMRAccessControl::m_prefixes;
 
+std::vector<unsigned int> CDMRAccessControl::m_slot1TGBlackList;
+std::vector<unsigned int> CDMRAccessControl::m_slot2TGBlackList;
+
 std::vector<unsigned int> CDMRAccessControl::m_slot1TGWhiteList;
 std::vector<unsigned int> CDMRAccessControl::m_slot2TGWhiteList;
 
@@ -35,8 +38,19 @@ bool CDMRAccessControl::m_selfOnly = false;
 
 unsigned int CDMRAccessControl::m_id = 0U;
 
-void CDMRAccessControl::init(const std::vector<unsigned int>& blacklist, const std::vector<unsigned int>& whitelist, const std::vector<unsigned int>& slot1TGWhitelist, const std::vector<unsigned int>& slot2TGWhitelist, bool selfOnly, const std::vector<unsigned int>& prefixes, unsigned int id)
+void CDMRAccessControl::init(
+const std::vector<unsigned int>& blacklist,
+const std::vector<unsigned int>& whitelist,
+const std::vector<unsigned int>& slot1TGBlacklist,
+const std::vector<unsigned int>& slot2TGBlacklist,
+const std::vector<unsigned int>& slot1TGWhitelist,
+const std::vector<unsigned int>& slot2TGWhitelist,
+bool selfOnly,
+const std::vector<unsigned int>&
+prefixes, unsigned int id)
 {
+	m_slot1TGBlackList = slot1TGBlacklist;
+	m_slot2TGBlackList = slot2TGBlacklist;
 	m_slot1TGWhiteList = slot1TGWhitelist;
 	m_slot2TGWhiteList = slot2TGWhitelist;
 	m_blackList        = blacklist;
@@ -84,6 +98,26 @@ bool CDMRAccessControl::validateSrcId(unsigned int id)
 	return true;
 }
 
+bool CDMRAccessControl::blacklistTG(unsigned int slotNo, unsigned int id)
+{
+	if (slotNo == 1U) {
+		if (m_slot1TGBlackList.empty())
+			return true;
+		
+		if (std::find(m_slot1TGBlackList.begin(), m_slot1TGBlackList.end(), id) != m_slot1TGBlackList.end())
+			return false;
+	
+	} else {
+	if (m_slot2TGBlackList.empty())
+			return true;
+	
+	if (std::find(m_slot2TGBlackList.begin(), m_slot2TGBlackList.end(), id) != m_slot2TGBlackList.end())
+			return false;
+	
+	}
+	return true;
+}
+
 bool CDMRAccessControl::validateTGId(unsigned int slotNo, bool group, unsigned int id)
 {
 	if (!group)
@@ -105,3 +139,4 @@ bool CDMRAccessControl::validateTGId(unsigned int slotNo, bool group, unsigned i
 		return std::find(m_slot2TGWhiteList.begin(), m_slot2TGWhiteList.end(), id) != m_slot2TGWhiteList.end();
 	}
 }
+

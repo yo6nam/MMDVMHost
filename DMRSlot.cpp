@@ -994,12 +994,19 @@ void CDMRSlot::writeEndNet(bool writeEnd)
 void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 {
 	unsigned int srcId = dmrData.getSrcId();
+	unsigned int dstId = dmrData.getDstId();
+	std::string src = m_lookup->find(srcId);
+		
 	if (!CDMRAccessControl::validateNetId(srcId)) {
-		std::string src = m_lookup->find(srcId);
 		LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
 		return;
 	}
-
+	
+	if (!CDMRAccessControl::blacklistTG(m_slotNo, dstId)) {
+		LogMessage("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dstId, src.c_str() );
+		return;
+	}
+	
 	if (m_rfState != RS_RF_LISTENING && m_netState == RS_NET_IDLE)
 		return;
 
@@ -1024,7 +1031,7 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 		unsigned int dstId = lc->getDstId();
 		unsigned int srcId = lc->getSrcId();
 		FLCO flco          = lc->getFLCO();
-
+		
 		if (dstId != dmrData.getDstId() || srcId != dmrData.getSrcId() || flco != dmrData.getFLCO())
 			LogWarning("DMR Slot %u, DMRD header doesn't match the DMR RF header: %u->%s%u %u->%s%u", m_slotNo,
 				dmrData.getSrcId(), dmrData.getFLCO() == FLCO_GROUP ? "TG" : "", dmrData.getDstId(),

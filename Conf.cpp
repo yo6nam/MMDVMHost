@@ -139,6 +139,8 @@ m_dmrDumpTAData(true),
 m_dmrPrefixes(),
 m_dmrBlackList(),
 m_dmrWhiteList(),
+m_dmrSlot1TGBlackList(),
+m_dmrSlot2TGBlackList(),
 m_dmrSlot1TGWhiteList(),
 m_dmrSlot2TGWhiteList(),
 m_dmrCallHang(10U),
@@ -555,6 +557,22 @@ bool CConf::read()
 				unsigned int id = (unsigned int)::atoi(p);
 				if (id > 0U)
 					m_dmrWhiteList.push_back(id);
+				p = ::strtok(NULL, ",\r\n");
+			}
+		} else if (::strcmp(key, "Slot1TGBlackList") == 0) {
+			char* p = ::strtok(value, ",\r\n");
+			while (p != NULL) {
+				unsigned int id = (unsigned int)::atoi(p);
+				if (id > 0U)
+					m_dmrSlot1TGBlackList.push_back(id);
+				p = ::strtok(NULL, ",\r\n");
+			}
+		} else if (::strcmp(key, "Slot2TGBlackList") == 0) {
+			char* p = ::strtok(value, ",\r\n");
+			while (p != NULL) {
+				unsigned int id = (unsigned int)::atoi(p);
+				if (id > 0U)
+					m_dmrSlot2TGBlackList.push_back(id);
 				p = ::strtok(NULL, ",\r\n");
 			}
 		} else if (::strcmp(key, "Slot1TGWhiteList") == 0) {
@@ -1201,6 +1219,16 @@ std::vector<unsigned int> CConf::getDMRBlackList() const
 std::vector<unsigned int> CConf::getDMRWhiteList() const
 {
 	return m_dmrWhiteList;
+}
+
+std::vector<unsigned int> CConf::getDMRSlot1TGBlackList() const
+{
+	return m_dmrSlot1TGBlackList;
+}
+
+std::vector<unsigned int> CConf::getDMRSlot2TGBlackList() const
+{
+	return m_dmrSlot2TGBlackList;
 }
 
 std::vector<unsigned int> CConf::getDMRSlot1TGWhiteList() const
