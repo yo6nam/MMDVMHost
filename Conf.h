@@ -270,6 +270,10 @@ public:
   bool         getLockFileEnabled() const;
   std::string  getLockFileName() const;
 
+  // The Mobile GPS section
+  bool         getMobileGPSEnabled() const;
+  std::string  getMobileGPSAddress() const;
+  unsigned int getMobileGPSPort() const;
 
 private:
   std::string  m_file;
@@ -485,6 +489,10 @@ private:
 
   bool         m_lockFileEnabled;
   std::string  m_lockFileName;
+
+  bool         m_mobileGPSEnabled;
+  std::string  m_mobileGPSAddress;
+  unsigned int m_mobileGPSPort;
 };
 
 #endif

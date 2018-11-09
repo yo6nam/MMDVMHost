@@ -55,7 +55,8 @@ enum SECTION {
   SECTION_NEXTION,
   SECTION_OLED,
   SECTION_LCDPROC,
-  SECTION_LOCK_FILE
+  SECTION_LOCK_FILE,
+  SECTION_MOBILE_GPS
 };
 
 CConf::CConf(const std::string& file) :
@@ -244,7 +245,10 @@ m_lcdprocLocalPort(0U),
 m_lcdprocDisplayClock(false),
 m_lcdprocUTC(false),
 m_lockFileEnabled(false),
-m_lockFileName()
+m_lockFileName(),
+m_mobileGPSEnabled(false),
+m_mobileGPSAddress(),
+m_mobileGPSPort(0U)
 {
 }
 
@@ -322,6 +326,8 @@ bool CConf::read()
 		  section = SECTION_LCDPROC;
 	  else if (::strncmp(buffer, "[Lock File]", 11U) == 0)
 		  section = SECTION_LOCK_FILE;
+	  else if (::strncmp(buffer, "[Mobile GPS]", 12U) == 0)
+		  section = SECTION_MOBILE_GPS;
 	  else
 		  section = SECTION_NONE;
 
@@ -818,6 +824,13 @@ bool CConf::read()
 			m_lockFileEnabled = ::atoi(value) == 1;
 		else if (::strcmp(key, "File") == 0)
 			m_lockFileName = value;
+	} else if (section == SECTION_MOBILE_GPS) {
+		if (::strcmp(key, "Enable") == 0)
+			m_mobileGPSEnabled = ::atoi(value) == 1;
+		else if (::strcmp(key, "Address") == 0)
+			m_mobileGPSAddress = value;
+		else if (::strcmp(key, "Port") == 0)
+			m_mobileGPSPort = (unsigned int)::atoi(value);
 	}
   }
 
@@ -1755,3 +1768,19 @@ std::string CConf::getLockFileName() const
 {
 	return m_lockFileName;
 }
+
+bool CConf::getMobileGPSEnabled() const
+{
+	return m_mobileGPSEnabled;
+}
+
+std::string CConf::getMobileGPSAddress() const
+{
+	return m_mobileGPSAddress;
+}
+
+unsigned int CConf::getMobileGPSPort() const
+{
+	return m_mobileGPSPort;
+}
+
