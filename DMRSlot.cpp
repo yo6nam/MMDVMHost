@@ -222,6 +222,8 @@ bool CDMRSlot::writeModem(unsigned char *data, unsigned int len)
 				delete lc;
 				return false;
 			}
+			
+
 
 			m_rfLC = lc;
 
@@ -371,6 +373,8 @@ bool CDMRSlot::writeModem(unsigned char *data, unsigned int len)
 				LogMessage("DMR Slot %u, RF user %u rejected for using TG %u", m_slotNo, srcId, dstId);
 				return false;
 			}
+			
+
 
 			m_rfFrames = dataHeader.getBlocks();
 
@@ -436,6 +440,7 @@ bool CDMRSlot::writeModem(unsigned char *data, unsigned int len)
 					LogMessage("DMR Slot %u, RF user %u rejected for using TG %u", m_slotNo, srcId, dstId);
 					return false;
 				}
+
 			}
 			
 			// Regenerate the CSBK data
@@ -770,6 +775,8 @@ bool CDMRSlot::writeModem(unsigned char *data, unsigned int len)
 					delete lc;
 					return false;
 				}
+				
+
 
 				m_rfLC = lc;
 
@@ -993,20 +1000,14 @@ void CDMRSlot::writeEndNet(bool writeEnd)
 
 void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 {
-	unsigned int srcId = dmrData.getSrcId();
-	unsigned int dstId = dmrData.getDstId();
+/*	unsigned int srcId = dmrData.getSrcId();
 	std::string src = m_lookup->find(srcId);
-		
+	
 	if (!CDMRAccessControl::validateNetId(srcId)) {
 		LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
 		return;
 	}
-	
-	if (!CDMRAccessControl::blacklistTG(m_slotNo, dstId)) {
-		LogMessage("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dstId, src.c_str() );
-		return;
-	}
-	
+*/
 	if (m_rfState != RS_RF_LISTENING && m_netState == RS_NET_IDLE)
 		return;
 
@@ -1018,6 +1019,7 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 	dmrData.getData(data + 2U);
 
 	if (dataType == DT_VOICE_LC_HEADER) {
+		
 		if (m_netState == RS_NET_AUDIO)
 			return;
 
@@ -1028,6 +1030,13 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 			lc = new CDMRLC(dmrData.getFLCO(), dmrData.getSrcId(), dmrData.getDstId());
 		}
 
+		if (!CDMRAccessControl::blacklistTG(m_slotNo, dmrData.getFLCO() == FLCO_GROUP, dmrData.getDstId())) {
+			std::string src = m_lookup->find(dmrData.getSrcId());
+			LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
+			delete lc;
+			return;
+		}
+		
 		unsigned int dstId = lc->getDstId();
 		unsigned int srcId = lc->getSrcId();
 		FLCO flco          = lc->getFLCO();
@@ -1109,6 +1118,13 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 
 			unsigned int dstId = lc->getDstId();
 			unsigned int srcId = lc->getSrcId();
+
+			if (!CDMRAccessControl::blacklistTG(m_slotNo, dmrData.getFLCO() == FLCO_GROUP, dmrData.getDstId())) {
+				std::string src = m_lookup->find(srcId);
+				LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
+				delete lc;
+				return;
+			}
 
 			m_netLC = lc;
 
@@ -1245,7 +1261,13 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 		bool gi = dataHeader.getGI();
 		unsigned int srcId = dataHeader.getSrcId();
 		unsigned int dstId = dataHeader.getDstId();
-
+		
+		if (!CDMRAccessControl::blacklistTG(m_slotNo, gi, dmrData.getDstId())) {
+			std::string src = m_lookup->find(srcId);
+			LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
+			return;
+		}
+		
 		m_netFrames = dataHeader.getBlocks();
 
 		// Regenerate the data header
@@ -1285,6 +1307,7 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 			writeEndNet();
 		}
 	} else if (dataType == DT_VOICE_SYNC) {
+
 		if (m_netState == RS_NET_IDLE) {
 			CDMRLC* lc = new CDMRLC(dmrData.getFLCO(), dmrData.getSrcId(), dmrData.getDstId());
 
@@ -1302,6 +1325,13 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 
 			m_netTimeoutTimer.start();
 			m_netTimeout = false;
+
+			if (!CDMRAccessControl::blacklistTG(m_slotNo, dmrData.getFLCO() == FLCO_GROUP, dmrData.getDstId())) {
+				std::string src = m_lookup->find(srcId);
+				LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
+				delete lc;
+				return;
+			}
 
 			if (m_duplex) {
 				m_queue.clear();
@@ -1402,6 +1432,7 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 #endif
 		}
 	} else if (dataType == DT_VOICE) {
+		
 		if (m_netState != RS_NET_AUDIO)
 			return;
 

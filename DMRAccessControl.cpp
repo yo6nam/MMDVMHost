@@ -98,8 +98,14 @@ bool CDMRAccessControl::validateSrcId(unsigned int id)
 	return true;
 }
 
-bool CDMRAccessControl::blacklistTG(unsigned int slotNo, unsigned int id)
+bool CDMRAccessControl::blacklistTG(unsigned int slotNo, bool group, unsigned int id)
 {
+	if (!group)
+		return true;
+
+	if (id == 0U)
+		return false;
+	
 	if (slotNo == 1U) {
 		if (m_slot1TGBlackList.empty())
 			return true;
