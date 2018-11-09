@@ -133,6 +133,10 @@ bool CDMRAccessControl::validateTGId(unsigned int slotNo, bool group, unsigned i
 	if (id == 0U)
 		return false;
 	
+	bool ret = blacklistTG(slotNo, true, id);
+		if (!ret)
+			return false;
+	
 	if (slotNo == 1U) {
 		if (m_slot1TGWhiteList.empty())
 			return true;

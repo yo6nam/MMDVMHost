@@ -222,8 +222,6 @@ bool CDMRSlot::writeModem(unsigned char *data, unsigned int len)
 				delete lc;
 				return false;
 			}
-			
-
 
 			m_rfLC = lc;
 
@@ -373,8 +371,6 @@ bool CDMRSlot::writeModem(unsigned char *data, unsigned int len)
 				LogMessage("DMR Slot %u, RF user %u rejected for using TG %u", m_slotNo, srcId, dstId);
 				return false;
 			}
-			
-
 
 			m_rfFrames = dataHeader.getBlocks();
 
@@ -776,8 +772,6 @@ bool CDMRSlot::writeModem(unsigned char *data, unsigned int len)
 					return false;
 				}
 				
-
-
 				m_rfLC = lc;
 
 				// The standby LC data
@@ -1000,14 +994,7 @@ void CDMRSlot::writeEndNet(bool writeEnd)
 
 void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 {
-/*	unsigned int srcId = dmrData.getSrcId();
-	std::string src = m_lookup->find(srcId);
-	
-	if (!CDMRAccessControl::validateNetId(srcId)) {
-		LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
-		return;
-	}
-*/
+
 	if (m_rfState != RS_RF_LISTENING && m_netState == RS_NET_IDLE)
 		return;
 
@@ -1034,6 +1021,12 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 			std::string src = m_lookup->find(dmrData.getSrcId());
 			LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
 			delete lc;
+			return;
+		}
+		
+		if (!CDMRAccessControl::validateNetId(dmrData.getSrcId())) {
+			std::string src = m_lookup->find(dmrData.getSrcId());
+			LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
 			return;
 		}
 		
@@ -1123,6 +1116,12 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 				std::string src = m_lookup->find(srcId);
 				LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
 				delete lc;
+				return;
+			}
+			
+			if (!CDMRAccessControl::validateNetId(srcId)) {
+				std::string src = m_lookup->find(dmrData.getSrcId());
+				LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
 				return;
 			}
 
@@ -1268,6 +1267,12 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 			return;
 		}
 		
+		if (!CDMRAccessControl::validateNetId(srcId)) {
+			std::string src = m_lookup->find(dmrData.getSrcId());
+			LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
+			return;
+		}
+
 		m_netFrames = dataHeader.getBlocks();
 
 		// Regenerate the data header
@@ -1333,6 +1338,12 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 				return;
 			}
 
+			if (!CDMRAccessControl::validateNetId(srcId)) {
+				std::string src = m_lookup->find(dmrData.getSrcId());
+				LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
+				return;
+			}
+		
 			if (m_duplex) {
 				m_queue.clear();
 				m_modem->writeDMRAbort(m_slotNo);
@@ -1432,7 +1443,6 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 #endif
 		}
 	} else if (dataType == DT_VOICE) {
-		
 		if (m_netState != RS_NET_AUDIO)
 			return;
 
