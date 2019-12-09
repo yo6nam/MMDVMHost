@@ -130,6 +130,8 @@ public:
   std::vector<unsigned int> getDMRPrefixes() const;
   std::vector<unsigned int> getDMRBlackList() const;
   std::vector<unsigned int> getDMRWhiteList() const;
+  std::vector<unsigned int> getDMRSlot1TGBlackList() const;
+  std::vector<unsigned int> getDMRSlot2TGBlackList() const;
   std::vector<unsigned int> getDMRSlot1TGWhiteList() const;
   std::vector<unsigned int> getDMRSlot2TGWhiteList() const;
   unsigned int getDMRCallHang() const;
@@ -369,6 +371,8 @@ private:
   std::vector<unsigned int> m_dmrPrefixes;
   std::vector<unsigned int> m_dmrBlackList;
   std::vector<unsigned int> m_dmrWhiteList;
+  std::vector<unsigned int> m_dmrSlot1TGBlackList;
+  std::vector<unsigned int> m_dmrSlot2TGBlackList;
   std::vector<unsigned int> m_dmrSlot1TGWhiteList;
   std::vector<unsigned int> m_dmrSlot2TGWhiteList;
   unsigned int m_dmrCallHang;

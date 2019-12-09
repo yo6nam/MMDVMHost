@@ -28,6 +28,9 @@ std::vector<unsigned int> CDMRAccessControl::m_whiteList;
 
 std::vector<unsigned int> CDMRAccessControl::m_prefixes;
 
+std::vector<unsigned int> CDMRAccessControl::m_slot1TGBlackList;
+std::vector<unsigned int> CDMRAccessControl::m_slot2TGBlackList;
+
 std::vector<unsigned int> CDMRAccessControl::m_slot1TGWhiteList;
 std::vector<unsigned int> CDMRAccessControl::m_slot2TGWhiteList;
 
@@ -35,8 +38,10 @@ bool CDMRAccessControl::m_selfOnly = false;
 
 unsigned int CDMRAccessControl::m_id = 0U;
 
-void CDMRAccessControl::init(const std::vector<unsigned int>& blacklist, const std::vector<unsigned int>& whitelist, const std::vector<unsigned int>& slot1TGWhitelist, const std::vector<unsigned int>& slot2TGWhitelist, bool selfOnly, const std::vector<unsigned int>& prefixes, unsigned int id)
+void CDMRAccessControl::init(const std::vector<unsigned int>& blacklist, const std::vector<unsigned int>& whitelist, const std::vector<unsigned int>& slot1TGBlacklist, const std::vector<unsigned int>& slot2TGBlacklist, const std::vector<unsigned int>& slot1TGWhitelist, const std::vector<unsigned int>& slot2TGWhitelist, bool selfOnly, const std::vector<unsigned int>& prefixes, unsigned int id)
 {
+	m_slot1TGBlackList = slot1TGBlacklist;
+	m_slot2TGBlackList = slot2TGBlacklist;
 	m_slot1TGWhiteList = slot1TGWhitelist;
 	m_slot2TGWhiteList = slot2TGWhitelist;
 	m_blackList        = blacklist;
@@ -45,7 +50,41 @@ void CDMRAccessControl::init(const std::vector<unsigned int>& blacklist, const s
 	m_prefixes         = prefixes;
 	m_id               = id;
 }
- 
+
+bool CDMRAccessControl::blacklistTG(unsigned int slotNo, bool group, unsigned int id)
+{
+	if (!group)
+		return true;
+
+	if (id == 0U)
+		return false;
+{
+	if (slotNo == 1U) {
+		if (m_slot1TGBlackList.empty())
+			return true;
+
+		if (std::find(m_slot1TGBlackList.begin(), m_slot1TGBlackList.end(), id) != m_slot1TGBlackList.end())
+			return false;
+
+	} else {
+	if (m_slot2TGBlackList.empty())
+			return true;
+
+	if (std::find(m_slot2TGBlackList.begin(), m_slot2TGBlackList.end(), id) != m_slot2TGBlackList.end())
+			return false;
+
+	}
+	return true;
+}
+
+bool CDMRAccessControl::validateNetId(unsigned int id)
+{
+	if (std::find(m_blackList.begin(), m_blackList.end(), id) != m_blackList.end())
+		return false;
+
+	return true;
+}
+
 bool CDMRAccessControl::validateSrcId(unsigned int id)
 {
 	if (m_selfOnly) {
@@ -84,7 +123,11 @@ bool CDMRAccessControl::validateTGId(unsigned int slotNo, bool group, unsigned i
 	// TG0 is never valid
 	if (id == 0U)
 		return false;
-	
+
+	bool ret = blacklistTG(slotNo, true, id);
+		if (!ret)
+			return false;
+
 	if (slotNo == 1U) {
 		if (m_slot1TGWhiteList.empty())
 			return true;

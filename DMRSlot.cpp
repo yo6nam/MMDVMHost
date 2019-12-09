@@ -1011,6 +1011,19 @@ void CDMRSlot::writeEndNet(bool writeEnd)
 
 void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 {
+	unsigned int srcId = dmrData.getSrcId();
+	unsigned int dstId = dmrData.getDstId();
+	std::string src = m_lookup->find(srcId);
+	if (!CDMRAccessControl::validateNetId(srcId)) {
+		LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
+		return;
+	}
+
+	if (!CDMRAccessControl::blacklistTG(m_slotNo, dstId)) {
+		LogMessage("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dstId, src.c_str() );
+		return;
+	}
+
 	if (!m_enabled)
 		return;
 
@@ -1033,6 +1046,19 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 		if (lc == NULL) {
 			LogMessage("DMR Slot %u, bad LC received from the network, replacing", m_slotNo);
 			lc = new CDMRLC(dmrData.getFLCO(), dmrData.getSrcId(), dmrData.getDstId());
+		}
+
+		if (!CDMRAccessControl::blacklistTG(m_slotNo, dmrData.getFLCO() == FLCO_GROUP, dmrData.getDstId())) {
+			std::string src = m_lookup->find(dmrData.getSrcId());
+			LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
+			delete lc;
+			return;
+		}
+
+		if (!CDMRAccessControl::validateNetId(dmrData.getSrcId())) {
+			std::string src = m_lookup->find(dmrData.getSrcId());
+			LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
+			return;
 		}
 
 		unsigned int dstId = lc->getDstId();
@@ -1117,6 +1143,19 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 
 			unsigned int dstId = lc->getDstId();
 			unsigned int srcId = lc->getSrcId();
+
+			if (!CDMRAccessControl::blacklistTG(m_slotNo, dmrData.getFLCO() == FLCO_GROUP, dmrData.getDstId())) {
+				std::string src = m_lookup->find(srcId);
+				LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
+				delete lc;
+				return;
+			}
+
+			if (!CDMRAccessControl::validateNetId(dmrData.getSrcId())) {
+				std::string src = m_lookup->find(dmrData.getSrcId());
+				LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
+				return;
+			}
 
 			lc->setOVCM(m_ovcm == DMR_OVCM_RX_ON || m_ovcm == DMR_OVCM_ON);
 			m_netLC = lc;
@@ -1259,6 +1298,12 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 		unsigned int srcId = dataHeader.getSrcId();
 		unsigned int dstId = dataHeader.getDstId();
 
+		if (!CDMRAccessControl::blacklistTG(m_slotNo, gi, dmrData.getDstId())) {
+			std::string src = m_lookup->find(srcId);
+			LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
+			return;
+		}
+
 		m_netFrames = dataHeader.getBlocks();
 
 		// Regenerate the data header
@@ -1316,6 +1361,19 @@ void CDMRSlot::writeNetwork(const CDMRData& dmrData)
 
 			m_netTimeoutTimer.start();
 			m_netTimeout = false;
+
+			if (!CDMRAccessControl::blacklistTG(m_slotNo, dmrData.getFLCO() == FLCO_GROUP, dmrData.getDstId())) {
+				std::string src = m_lookup->find(srcId);
+				LogWarning("DMR Slot %u, TG %u is blackisted. Muted user is %s", m_slotNo, dmrData.getDstId(), src.c_str() );
+				delete lc;
+				return;
+			}
+
+			if (!CDMRAccessControl::validateNetId(dmrData.getSrcId())) {
+				std::string src = m_lookup->find(dmrData.getSrcId());
+				LogMessage("DMR Slot %u, NET user %s rejected due to WhiteList/BlackList", m_slotNo, src.c_str());
+				return;
+			}
 
 			if (m_duplex) {
 				m_queue.clear();
