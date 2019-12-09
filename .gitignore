@@ -17,3 +17,4 @@ RemoteCommand
 .vs
 *.ambe
 GitVersion.h
+DMRIds.dat
