@@ -27,7 +27,7 @@ public:
 	static bool validateNetId(unsigned int id);
 
 	static bool validateTGId(unsigned int slotNo, bool group, unsigned int id);
-	
+
 	static bool blacklistTG(unsigned int slotNo, bool group, unsigned int id);
 
 	static void init(const std::vector<unsigned int>& blacklist, const std::vector<unsigned int>& whitelist, const std::vector<unsigned int>& slot1TGBlacklist, const std::vector<unsigned int>& slot2TGBlacklist, const std::vector<unsigned int>& slot1TGWhitelist, const std::vector<unsigned int>& slot2TGWhitelist, bool selfOnly, const std::vector<unsigned int>& prefixes, unsigned int id);
@@ -40,7 +40,7 @@ private:
 
 	static std::vector<unsigned int> m_slot1TGBlackList;
 	static std::vector<unsigned int> m_slot2TGBlackList;
-	
+
 	static std::vector<unsigned int> m_slot1TGWhiteList;
 	static std::vector<unsigned int> m_slot2TGWhiteList;
 
