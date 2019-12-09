@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015-2019 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include "RSSIInterpolator.h"
 #include "DMREmbeddedData.h"
 #include "DMRNetwork.h"
+#include "DMRTA.h"
 #include "RingBuffer.h"
 #include "StopWatch.h"
 #include "DMRLookup.h"
@@ -57,7 +58,11 @@ public:
 
 	void clock();
 
-	static void init(unsigned int colorCode, bool embeddedLCOnly, bool dumpTAData, unsigned int callHang, CModem* modem, CDMRNetwork* network, CDisplay* display, bool duplex, CDMRLookup* lookup, CRSSIInterpolator* rssiMapper, unsigned int jitter);
+	bool isBusy() const;
+
+	void enable(bool enabled);
+
+	static void init(unsigned int colorCode, bool embeddedLCOnly, bool dumpTAData, unsigned int callHang, CModem* modem, CDMRNetwork* network, CDisplay* display, bool duplex, CDMRLookup* lookup, CRSSIInterpolator* rssiMapper, unsigned int jitter, DMR_OVCM_TYPES ovcm);
 
 private:
 	unsigned int               m_slotNo;
@@ -69,7 +74,7 @@ private:
 	unsigned int               m_rfEmbeddedReadN;
 	unsigned int               m_rfEmbeddedWriteN;
 	unsigned char              m_rfTalkerId;
-	unsigned char*             m_rfTalkerAlias;
+	CDMRTA                     m_rfTalkerAlias;
 	CDMREmbeddedData           m_netEmbeddedLC;
 	CDMREmbeddedData*          m_netEmbeddedData;
 	unsigned int               m_netEmbeddedReadN;
@@ -104,6 +109,7 @@ private:
 	unsigned char              m_minRSSI;
 	unsigned int               m_aveRSSI;
 	unsigned int               m_rssiCount;
+	bool                       m_enabled;
 	FILE*                      m_fp;
 
 	static unsigned int        m_colorCode;
@@ -117,6 +123,7 @@ private:
 	static bool                m_duplex;
 	static CDMRLookup*         m_lookup;
 	static unsigned int        m_hangCount;
+	static DMR_OVCM_TYPES      m_ovcm;
 
 	static CRSSIInterpolator*  m_rssiMapper;
 

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015-2019 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -56,7 +56,8 @@ enum SECTION {
   SECTION_OLED,
   SECTION_LCDPROC,
   SECTION_LOCK_FILE,
-  SECTION_MOBILE_GPS
+  SECTION_MOBILE_GPS,
+  SECTION_REMOTE_CONTROL
 };
 
 CConf::CConf(const std::string& file) :
@@ -129,7 +130,7 @@ m_dstarErrorReply(true),
 m_dstarRemoteGateway(false),
 m_dstarModeHang(10U),
 m_dmrEnabled(false),
-m_dmrBeacons(false),
+m_dmrBeacons(DMR_BEACONS_OFF),
 m_dmrBeaconInterval(60U),
 m_dmrBeaconDuration(3U),
 m_dmrId(0U),
@@ -147,13 +148,14 @@ m_dmrSlot2TGWhiteList(),
 m_dmrCallHang(10U),
 m_dmrTXHang(4U),
 m_dmrModeHang(10U),
+m_dmrOVCM(DMR_OVCM_OFF),
 m_fusionEnabled(false),
 m_fusionLowDeviation(false),
 m_fusionRemoteGateway(false),
 m_fusionSelfOnly(false),
 m_fusionTXHang(4U),
-m_fusionSQLEnabled(false),
-m_fusionSQL(0U),
+m_fusionDGIdEnabled(false),
+m_fusionDGId(0U),
 m_fusionModeHang(10U),
 m_p25Enabled(false),
 m_p25Id(0U),
@@ -238,7 +240,7 @@ m_oledBrightness(0U),
 m_oledInvert(false),
 m_oledScroll(false),
 m_oledRotate(false),
-m_oledCast(false),
+m_oledLogoScreensaver(true),
 m_lcdprocAddress(),
 m_lcdprocPort(0U),
 m_lcdprocLocalPort(0U),
@@ -248,7 +250,9 @@ m_lockFileEnabled(false),
 m_lockFileName(),
 m_mobileGPSEnabled(false),
 m_mobileGPSAddress(),
-m_mobileGPSPort(0U)
+m_mobileGPSPort(0U),
+m_remoteControlEnabled(false),
+m_remoteControlPort(0U)
 {
 }
 
@@ -328,6 +332,8 @@ bool CConf::read()
 		  section = SECTION_LOCK_FILE;
 	  else if (::strncmp(buffer, "[Mobile GPS]", 12U) == 0)
 		  section = SECTION_MOBILE_GPS;
+	  else if (::strncmp(buffer, "[Remote Control]", 16U) == 0)
+		  section = SECTION_REMOTE_CONTROL;
 	  else
 		  section = SECTION_NONE;
 
@@ -526,10 +532,11 @@ bool CConf::read()
 		if (::strcmp(key, "Enable") == 0)
 			m_dmrEnabled = ::atoi(value) == 1;
 		else if (::strcmp(key, "Beacons") == 0)
-			m_dmrBeacons = ::atoi(value) == 1;
-		else if (::strcmp(key, "BeaconInterval") == 0)
+			m_dmrBeacons = ::atoi(value) == 1 ? DMR_BEACONS_NETWORK : DMR_BEACONS_OFF;
+		else if (::strcmp(key, "BeaconInterval") == 0) {
+			m_dmrBeacons = m_dmrBeacons != DMR_BEACONS_OFF ? DMR_BEACONS_TIMED : DMR_BEACONS_OFF;
 			m_dmrBeaconInterval = (unsigned int)::atoi(value);
-		else if (::strcmp(key, "BeaconDuration") == 0)
+		} else if (::strcmp(key, "BeaconDuration") == 0)
 			m_dmrBeaconDuration = (unsigned int)::atoi(value);
 		else if (::strcmp(key, "Id") == 0)
 			m_dmrId = (unsigned int)::atoi(value);
@@ -603,14 +610,29 @@ bool CConf::read()
 			m_dmrCallHang = (unsigned int)::atoi(value);
 		else if (::strcmp(key, "ModeHang") == 0)
 			m_dmrModeHang = (unsigned int)::atoi(value);
-	} else if (section == SECTION_FUSION) {
+		else if (::strcmp(key, "OVCM") == 0)
+			switch(::atoi(value)) {
+				case 1:
+					m_dmrOVCM = DMR_OVCM_RX_ON;
+					break;
+				case 2:
+					m_dmrOVCM = DMR_OVCM_TX_ON;
+					break;
+				case 3:
+					m_dmrOVCM = DMR_OVCM_ON;
+					break;
+				default:
+					m_dmrOVCM = DMR_OVCM_OFF;
+					break;
+			}
+    } else if (section == SECTION_FUSION) {
 		if (::strcmp(key, "Enable") == 0)
 			m_fusionEnabled = ::atoi(value) == 1;
 		else if (::strcmp(key, "LowDeviation") == 0)
 			m_fusionLowDeviation = ::atoi(value) == 1;
-		else if (::strcmp(key, "DSQ") == 0 || ::strcmp(key, "DGID") == 0) {
-			m_fusionSQLEnabled = true;
-			m_fusionSQL        = (unsigned int)::atoi(value);
+		else if (::strcmp(key, "DGID") == 0) {
+			m_fusionDGIdEnabled = true;
+			m_fusionDGId        = (unsigned int)::atoi(value);
 		} else if (::strcmp(key, "RemoteGateway") == 0)
 			m_fusionRemoteGateway = ::atoi(value) == 1;
 		else if (::strcmp(key, "SelfOnly") == 0)
@@ -804,8 +826,8 @@ bool CConf::read()
 			m_oledScroll = ::atoi(value) == 1;
 		else if (::strcmp(key, "Rotate") == 0)
 			m_oledRotate = ::atoi(value) == 1;
-		else if (::strcmp(key, "Cast") == 0)
-			m_oledCast = ::atoi(value) == 1;
+		else if (::strcmp(key, "LogoScreensaver") == 0)
+			m_oledLogoScreensaver = ::atoi(value) == 1;
 	} else if (section == SECTION_LCDPROC) {
 		if (::strcmp(key, "Address") == 0)
 			m_lcdprocAddress = value;
@@ -831,6 +853,11 @@ bool CConf::read()
 			m_mobileGPSAddress = value;
 		else if (::strcmp(key, "Port") == 0)
 			m_mobileGPSPort = (unsigned int)::atoi(value);
+	} else if (section == SECTION_REMOTE_CONTROL) {
+		if (::strcmp(key, "Enable") == 0)
+			m_remoteControlEnabled = ::atoi(value) == 1;
+		else if (::strcmp(key, "Port") == 0)
+			m_remoteControlPort = (unsigned int)::atoi(value);
 	}
   }
 
@@ -1179,7 +1206,7 @@ bool CConf::getDMREnabled() const
 	return m_dmrEnabled;
 }
 
-bool CConf::getDMRBeacons() const
+DMR_BEACONS CConf::getDMRBeacons() const
 {
 	return m_dmrBeacons;
 }
@@ -1269,6 +1296,11 @@ unsigned int CConf::getDMRModeHang() const
 	return m_dmrModeHang;
 }
 
+DMR_OVCM_TYPES CConf::getDMROVCM() const
+{
+	return m_dmrOVCM;
+}
+
 bool CConf::getFusionEnabled() const
 {
 	return m_fusionEnabled;
@@ -1294,14 +1326,14 @@ bool CConf::getFusionSelfOnly() const
 	return m_fusionSelfOnly;
 }
 
-bool CConf::getFusionSQLEnabled() const
+bool CConf::getFusionDGIdEnabled() const
 {
-	return m_fusionSQLEnabled;
+	return m_fusionDGIdEnabled;
 }
 
-unsigned char CConf::getFusionSQL() const
+unsigned char CConf::getFusionDGId() const
 {
-	return m_fusionSQL;
+	return m_fusionDGId;
 }
 
 unsigned int CConf::getFusionModeHang() const
@@ -1719,10 +1751,11 @@ bool CConf::getOLEDRotate() const
 	return m_oledRotate;
 }
 
-bool CConf::getOLEDCast() const
+bool CConf::getOLEDLogoScreensaver() const
 {
-	return m_oledCast;
+	return m_oledLogoScreensaver;
 }
+
 
 std::string CConf::getLCDprocAddress() const
 {
@@ -1784,3 +1817,12 @@ unsigned int CConf::getMobileGPSPort() const
 	return m_mobileGPSPort;
 }
 
+bool CConf::getRemoteControlEnabled() const
+{
+	return m_remoteControlEnabled;
+}
+
+unsigned int CConf::getRemoteControlPort() const
+{
+	return m_remoteControlPort;
+}

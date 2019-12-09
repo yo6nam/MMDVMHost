@@ -22,8 +22,10 @@
 #include "ModemSerialPort.h"
 #include "NullDisplay.h"
 #include "TFTSerial.h"
+#include "TFTSurenoo.h"
 #include "LCDproc.h"
 #include "Nextion.h"
+#include "CASTInfo.h"
 #include "Conf.h"
 #include "Modem.h"
 #include "UMP.h"
@@ -157,47 +159,8 @@ void CDisplay::writeDMRRSSI(unsigned int slotNo, unsigned char rssi)
 
 void CDisplay::writeDMRTA(unsigned int slotNo, unsigned char* talkerAlias, const char* type)
 {
-    char TA[32U];
-    unsigned char *b;
-    unsigned char c;
-    int j;
-    unsigned int i,t1,t2, TAsize, TAformat;
-
-    if (strcmp(type," ")==0) { writeDMRTAInt(slotNo, (unsigned char*)TA, type); return; }
-
-    TAformat=(talkerAlias[0]>>6U) & 0x03U;
-    TAsize = (talkerAlias[0]>>1U) & 0x1FU;
-    ::strcpy(TA,"(could not decode)");
-    switch (TAformat) {
-	case 0U:		// 7 bit
-		::memset (&TA,0,32U);
-		b=&talkerAlias[0];
-		t1=0; t2=0; c=0;
-		for (i=0;(i<32U)&&(t2<TAsize);i++) {
-		    for (j=7U;j>=0;j--) {
-			c = (c<<1U) | (b[i] >> j);
-			if (++t1==7U) { if (i>0) {TA[t2++]=c & 0x7FU; } t1=0; c=0; }
-		    }
-		}
-		break;
-	case 1U:		// ISO 8 bit
-	case 2U:		// UTF8
-		::strcpy(TA,(char*)talkerAlias+1U);
-		break;
-	case 3U:		// UTF16 poor man's conversion
-		t2=0;
-		::memset (&TA,0,32U);
-		for(i=0;(i<15)&&(t2<TAsize);i++) {
-		    if (talkerAlias[2U*i+1U]==0)
-			TA[t2++]=talkerAlias[2U*i+2U]; else TA[t2++]='?';
-		}
-		TA[TAsize]=0;
-		break;
-    }
-    LogMessage("DMR Talker Alias (Data Format %u, Received %u/%u char): '%s'", TAformat, ::strlen(TA), TAsize, TA);
-    if (::strlen(TA)>TAsize) { if (strlen(TA)<29U) strcat(TA," ?"); else strcpy(TA+28U," ?"); }
-    if (strlen((char*)TA)>=4U) writeDMRTAInt(slotNo, (unsigned char*)TA, type);
-
+    if (strcmp(type," ")==0) { writeDMRTAInt(slotNo, (unsigned char*)"", type); return; }
+    if (strlen((char*)talkerAlias)>=4U) writeDMRTAInt(slotNo, (unsigned char*)talkerAlias, type);
 }
 
 void CDisplay::writeDMRBER(unsigned int slotNo, float ber)
@@ -470,7 +433,7 @@ CDisplay* CDisplay::createDisplay(const CConf& conf, CUMP* ump, CModem* modem)
 	LogInfo("Display Parameters");
 	LogInfo("    Type: %s", type.c_str());
 
-	if (type == "TFT Serial") {
+	if (type == "TFT Serial" || type == "TFT Surenoo") {
 		std::string port        = conf.getTFTSerialPort();
 		unsigned int brightness = conf.getTFTSerialBrightness();
 
@@ -481,9 +444,12 @@ CDisplay* CDisplay::createDisplay(const CConf& conf, CUMP* ump, CModem* modem)
 		if (port == "modem")
 			serial = new CModemSerialPort(modem);
 		else
-			serial = new CSerialController(port, SERIAL_9600);
+			serial = new CSerialController(port, (type == "TFT Serial") ? SERIAL_9600 : SERIAL_115200);
 
-		display = new CTFTSerial(conf.getCallsign(), dmrid, serial, brightness);
+		if (type == "TFT Surenoo")
+			display = new CTFTSurenoo(conf.getCallsign(), dmrid, serial, brightness);
+		else
+			display = new CTFTSerial(conf.getCallsign(), dmrid, serial, brightness);
 	} else if (type == "Nextion") {
 		std::string port            = conf.getNextionPort();
 		unsigned int brightness     = conf.getNextionBrightness();
@@ -607,10 +573,12 @@ CDisplay* CDisplay::createDisplay(const CConf& conf, CUMP* ump, CModem* modem)
 	        bool          invert     = conf.getOLEDInvert();
 	        bool          scroll     = conf.getOLEDScroll();
 		bool          rotate     = conf.getOLEDRotate();
-		bool          cast       = conf.getOLEDCast();
+		bool          logosaver  = conf.getOLEDLogoScreensaver();
 
-		display = new COLED(type, brightness, invert, scroll, rotate, conf.getDMRNetworkSlot1(), conf.getDMRNetworkSlot2(), cast ? modem : NULL);
+		display = new COLED(type, brightness, invert, scroll, rotate, logosaver, conf.getDMRNetworkSlot1(), conf.getDMRNetworkSlot2());
 #endif
+	} else if (type == "CAST") {
+		display = new CCASTInfo(modem);
 	} else {
 		LogWarning("No valid display found, disabling");
 		display = new CNullDisplay;

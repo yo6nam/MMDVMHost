@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015-2019 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ public:
 
   // The DMR section
   bool         getDMREnabled() const;
-  bool         getDMRBeacons() const;
+  DMR_BEACONS  getDMRBeacons() const;
   unsigned int getDMRBeaconInterval() const;
   unsigned int getDMRBeaconDuration() const;
   unsigned int getDMRId() const;
@@ -137,6 +137,7 @@ public:
   unsigned int getDMRCallHang() const;
   unsigned int getDMRTXHang() const;
   unsigned int getDMRModeHang() const;
+  DMR_OVCM_TYPES getDMROVCM() const;
 
   // The System Fusion section
   bool          getFusionEnabled() const;
@@ -144,8 +145,8 @@ public:
   bool          getFusionRemoteGateway() const;
   bool          getFusionSelfOnly() const;
   unsigned int  getFusionTXHang() const;
-  bool          getFusionSQLEnabled() const;
-  unsigned char getFusionSQL() const;
+  bool          getFusionDGIdEnabled() const;
+  unsigned char getFusionDGId() const;
   unsigned int  getFusionModeHang() const;
 
   // The P25 section
@@ -256,7 +257,7 @@ public:
   bool           getOLEDInvert() const;
   bool           getOLEDScroll() const;
   bool           getOLEDRotate() const;
-  bool           getOLEDCast() const;
+  bool           getOLEDLogoScreensaver() const;
 
   // The LCDproc section
   std::string  getLCDprocAddress() const;
@@ -274,6 +275,10 @@ public:
   bool         getMobileGPSEnabled() const;
   std::string  getMobileGPSAddress() const;
   unsigned int getMobileGPSPort() const;
+
+  // The Remote Control section
+  bool         getRemoteControlEnabled() const;
+  unsigned int getRemoteControlPort() const;
 
 private:
   std::string  m_file;
@@ -355,7 +360,7 @@ private:
   unsigned int m_dstarModeHang;
 
   bool         m_dmrEnabled;
-  bool         m_dmrBeacons;
+  DMR_BEACONS  m_dmrBeacons;
   unsigned int m_dmrBeaconInterval;
   unsigned int m_dmrBeaconDuration;
   unsigned int m_dmrId;
@@ -373,14 +378,15 @@ private:
   unsigned int m_dmrCallHang;
   unsigned int m_dmrTXHang;
   unsigned int m_dmrModeHang;
+  DMR_OVCM_TYPES m_dmrOVCM;
 
   bool          m_fusionEnabled;
   bool          m_fusionLowDeviation;
   bool          m_fusionRemoteGateway;
   bool          m_fusionSelfOnly;
   unsigned int  m_fusionTXHang;
-  bool          m_fusionSQLEnabled;
-  unsigned char m_fusionSQL;
+  bool          m_fusionDGIdEnabled;
+  unsigned char m_fusionDGId;
   unsigned int  m_fusionModeHang;
 
   bool         m_p25Enabled;
@@ -478,7 +484,7 @@ private:
   bool          m_oledInvert;
   bool          m_oledScroll;
   bool          m_oledRotate;
-  bool          m_oledCast;
+  bool          m_oledLogoScreensaver;
 
   std::string  m_lcdprocAddress;
   unsigned int m_lcdprocPort;
@@ -493,6 +499,9 @@ private:
   bool         m_mobileGPSEnabled;
   std::string  m_mobileGPSAddress;
   unsigned int m_mobileGPSPort;
+
+  bool         m_remoteControlEnabled;
+  unsigned int m_remoteControlPort;
 };
 
 #endif

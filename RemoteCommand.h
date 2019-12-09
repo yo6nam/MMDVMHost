@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015-2019 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2019 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,9 +16,21 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(VERSION_H)
-#define	VERSION_H
+#ifndef RemoteCommand_H
+#define RemoteCommand_H
 
-const char* VERSION = "20190131";
+#include <string>
+
+class CRemoteCommand
+{
+public:
+	CRemoteCommand(unsigned int port);
+	~CRemoteCommand();
+	
+	int send(const std::string& command);
+
+private:
+	unsigned int m_port;
+};
 
 #endif

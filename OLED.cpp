@@ -169,15 +169,15 @@ const unsigned char logo_POCSAG_bmp [] =
 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
-COLED::COLED(unsigned char displayType, unsigned char displayBrightness, bool displayInvert, bool displayScroll, bool displayRotate, bool slot1Enabled, bool slot2Enabled, CModem* modem) :
+COLED::COLED(unsigned char displayType, unsigned char displayBrightness, bool displayInvert, bool displayScroll, bool displayRotate, bool displayLogoScreensaver, bool slot1Enabled, bool slot2Enabled) :
 m_displayType(displayType),
 m_displayBrightness(displayBrightness),
 m_displayInvert(displayInvert),
 m_displayScroll(displayScroll),
 m_displayRotate(displayRotate),
+m_displayLogoScreensaver(displayLogoScreensaver),
 m_slot1Enabled(slot1Enabled),
 m_slot2Enabled(slot2Enabled),
-m_modem(modem),
 m_ipaddress(),
 m_display()
 {
@@ -258,9 +258,6 @@ void COLED::setIdleInt()
         m_ipaddress = (char*)info;
         delete m_network;
 
-        if (m_modem != NULL)
-            m_modem->writeIPInfo(m_ipaddress);
-
         networkInfoInitialized = true;
         passCounter = 0;
     }
@@ -331,8 +328,6 @@ void COLED::writeDStarInt(const char* my1, const char* my2, const char* your, co
     OLED_statusbar();
     m_display.display();
 
-    if (m_modem != NULL)
-        m_modem->writeDStarInfo(my1, my2, your, type, reflector);
 }
 
 void COLED::clearDStarInt()
@@ -393,8 +388,6 @@ void COLED::writeDMRInt(unsigned int slotNo,const std::string& src,bool group,co
     OLED_statusbar();
     m_display.display();
 
-    if (m_modem != NULL)
-        m_modem->writeDMRInfo(slotNo, src, group, dst, type);
 }
 
 void COLED::clearDMRInt(unsigned int slotNo)
@@ -442,8 +435,6 @@ void COLED::writeFusionInt(const char* source, const char* dest, const char* typ
     OLED_statusbar();
     m_display.display();
 
-    if (m_modem != NULL)
-        m_modem->writeYSFInfo(source, dest, type, origin);
 }
 
 void COLED::clearFusionInt()
@@ -475,8 +466,6 @@ void COLED::writeP25Int(const char* source, bool group, unsigned int dest, const
     OLED_statusbar();
     m_display.display();
 
-    if (m_modem != NULL)
-        m_modem->writeP25Info(source, group, dest, type);
 }
 
 void COLED::clearP25Int()
@@ -508,8 +497,6 @@ void COLED::writeNXDNInt(const char* source, bool group, unsigned int dest, cons
     OLED_statusbar();
     m_display.display();
 
-    if (m_modem != NULL)
-        m_modem->writeNXDNInfo(source, group, dest, type);
 }
 
 void COLED::clearNXDNInt()
@@ -541,8 +528,6 @@ void COLED::writePOCSAGInt(uint32_t ric, const std::string& message)
     OLED_statusbar();
     m_display.display();
 
-    if (m_modem != NULL)
-        m_modem->writePOCSAGInfo(ric, message);
 }
 
 void COLED::clearPOCSAGInt()
@@ -616,9 +601,9 @@ void COLED::OLED_statusbar()
         m_display.drawBitmap(0, 0, logo_NXDN_bmp, 128, 16, WHITE);
     else if (m_mode == MODE_POCSAG)
         m_display.drawBitmap(0, 0, logo_POCSAG_bmp, 128, 16, WHITE);
-    else
+    else if (m_displayLogoScreensaver)
         m_display.drawBitmap(0, 0, logo_glcd_bmp, 128, 16, WHITE);
 
     if (m_displayScroll)
-        m_display.startscrollright(0x00,0x02);
+        m_display.startscrollright(0x00,0x01);
 }

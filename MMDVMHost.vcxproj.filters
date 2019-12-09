@@ -65,6 +65,9 @@
     <ClInclude Include="QR1676.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RemoteControl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="RingBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -278,6 +281,15 @@
     <ClInclude Include="MobileGPS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NullModem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DMRTA.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CASTInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BPTC19696.cpp">
@@ -323,6 +335,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QR1676.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RemoteControl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RS129.cpp">
@@ -518,6 +533,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MobileGPS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NullModem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DMRTA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CASTInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

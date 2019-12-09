@@ -1,5 +1,5 @@
 /*
-*   Copyright (C) 2016,2017,2018 by Jonathan Naylor G4KLX
+*   Copyright (C) 2016-2019 by Jonathan Naylor G4KLX
 *   Copyright (C) 2018 by Bryan Biedenkapp <gatekeep@gmail.com>
 *
 *   This program is free software; you can redistribute it and/or modify
@@ -80,6 +80,7 @@ m_maxRSSI(0U),
 m_minRSSI(0U),
 m_aveRSSI(0U),
 m_rssiCount(0U),
+m_enabled(true),
 m_fp(NULL)
 {
 	assert(display != NULL);
@@ -115,13 +116,20 @@ bool CP25Control::writeModem(unsigned char* data, unsigned int len)
 {
 	assert(data != NULL);
 
+	if (!m_enabled)
+		return false;
+
 	bool sync = data[1U] == 0x01U;
 
 	if (data[0U] == TAG_LOST && m_rfState == RS_RF_AUDIO) {
+		bool           grp = m_rfData.getLCF() == P25_LCF_GROUP;
+		unsigned int dstId = m_rfData.getDstId();
+		std::string source = m_lookup->find(m_rfData.getSrcId());
+
 		if (m_rssi != 0U)
-			LogMessage("P25, transmission lost, %.1f seconds, BER: %.1f%%, RSSI: -%u/-%u/-%u dBm", float(m_rfFrames) / 5.56F, float(m_rfErrs * 100U) / float(m_rfBits), m_minRSSI, m_maxRSSI, m_aveRSSI / m_rssiCount);
+			LogMessage("P25, transmission lost from %s to %s%u, %.1f seconds, BER: %.1f%%, RSSI: -%u/-%u/-%u dBm", source.c_str(), grp ? "TG " : "", dstId, float(m_rfFrames) / 5.56F, float(m_rfErrs * 100U) / float(m_rfBits), m_minRSSI, m_maxRSSI, m_aveRSSI / m_rssiCount);
 		else
-			LogMessage("P25, transmission lost, %.1f seconds, BER: %.1f%%", float(m_rfFrames) / 5.56F, float(m_rfErrs * 100U) / float(m_rfBits));
+			LogMessage("P25, transmission lost from %s to %s%u, %.1f seconds, BER: %.1f%%", source.c_str(), grp ? "TG " : "", dstId, float(m_rfFrames) / 5.56F, float(m_rfErrs * 100U) / float(m_rfBits));
 
 		if (m_netState == RS_NET_IDLE)
 			m_display->clearP25();
@@ -208,24 +216,9 @@ bool CP25Control::writeModem(unsigned char* data, unsigned int len)
 		m_rssiCount++;
 	}
 
-	if (duid == P25_DUID_HEADER) {
+	if (duid == P25_DUID_LDU1) {
 		if (m_rfState == RS_RF_LISTENING) {
 			m_rfData.reset();
-			bool ret = m_rfData.decodeHeader(data + 2U);
-			if (!ret) {
-				m_lastDUID = duid;
-				return false;
-			}
-
-			LogMessage("P25, received RF header");
-
-			m_lastDUID = duid;
-			return true;
-		}
-	}
-	else if (duid == P25_DUID_LDU1) {
-		if (m_rfState == RS_RF_LISTENING) {
-			//m_rfData.reset();
 			bool ret = m_rfData.decodeLDU1(data + 2U);
 			if (!ret) {
 				m_lastDUID = duid;
@@ -277,11 +270,6 @@ bool CP25Control::writeModem(unsigned char* data, unsigned int len)
 		}
 
 		if (m_rfState == RS_RF_AUDIO) {
-			bool ret = m_rfData.decodeLDU1(data + 2U);
-			if (!ret) {
-				return false;
-			}
-
 			// Regenerate Sync
 			CSync::addP25Sync(data + 2U);
 
@@ -326,11 +314,6 @@ bool CP25Control::writeModem(unsigned char* data, unsigned int len)
 		}
 	} else if (duid == P25_DUID_LDU2) {
 		if (m_rfState == RS_RF_AUDIO) {
-			bool ret = m_rfData.decodeLDU2(data + 2U);
-			if (!ret) {
-				return false;
-			}
-
 			writeNetwork(m_rfLDU, m_lastDUID, false);
 
 			// Regenerate Sync
@@ -389,14 +372,15 @@ bool CP25Control::writeModem(unsigned char* data, unsigned int len)
 			return false;
 		}
 	
-		unsigned int srcId = m_rfData.getSrcId();
+		bool           grp = m_rfData.getLCF() == P25_LCF_GROUP;
 		unsigned int dstId = m_rfData.getDstId();
-	
+		std::string source = m_lookup->find(m_rfData.getSrcId());
+
 		unsigned char data[P25_TSDU_FRAME_LENGTH_BYTES + 2U];
 	
 		switch (m_rfData.getLCF()) {
 		case P25_LCF_TSBK_CALL_ALERT:
-			LogMessage("P25, received RF TSDU transmission, CALL ALERT from %u to %u", srcId, dstId);
+			LogMessage("P25, received RF TSDU transmission, CALL ALERT from %s to %s%u", source.c_str(), grp ? "TG " : "", dstId);
 			::memset(data + 2U, 0x00U, P25_TSDU_FRAME_LENGTH_BYTES);
 	
 			// Regenerate Sync
@@ -422,7 +406,7 @@ bool CP25Control::writeModem(unsigned char* data, unsigned int len)
 			}
 			break;
 		case P25_LCF_TSBK_ACK_RSP_FNE:
-			LogMessage("P25, received RF TSDU transmission, ACK RESPONSE FNE from %u to %u", srcId, dstId);
+			LogMessage("P25, received RF TSDU transmission, ACK RESPONSE FNE from %s to %s%u", source.c_str(), grp ? "TG " : "", dstId);
 			::memset(data + 2U, 0x00U, P25_TSDU_FRAME_LENGTH_BYTES);
 
 			// Regenerate Sync
@@ -469,15 +453,19 @@ bool CP25Control::writeModem(unsigned char* data, unsigned int len)
 			// Add busy bits
 			addBusyBits(data + 2U, P25_TERM_FRAME_LENGTH_BITS, false, true);
 
+			bool           grp = m_rfData.getLCF() == P25_LCF_GROUP;
+			unsigned int dstId = m_rfData.getDstId();
+			std::string source = m_lookup->find(m_rfData.getSrcId());
+
 			m_rfState = RS_RF_LISTENING;
 			m_rfTimeout.stop();
 			m_rfData.reset();
 			m_lastDUID = duid;
 
 			if (m_rssi != 0U)
-				LogMessage("P25, received RF end of voice transmission, %.1f seconds, BER: %.1f%%, RSSI: -%u/-%u/-%u dBm", float(m_rfFrames) / 5.56F, float(m_rfErrs * 100U) / float(m_rfBits), m_minRSSI, m_maxRSSI, m_aveRSSI / m_rssiCount);
+				LogMessage("P25, received RF end of voice transmission from %s to %s%u, %.1f seconds, BER: %.1f%%, RSSI: -%u/-%u/-%u dBm", source.c_str(), grp ? "TG " : "", dstId, float(m_rfFrames) / 5.56F, float(m_rfErrs * 100U) / float(m_rfBits), m_minRSSI, m_maxRSSI, m_aveRSSI / m_rssiCount);
 			else
-				LogMessage("P25, received RF end of voice transmission, %.1f seconds, BER: %.1f%%", float(m_rfFrames) / 5.56F, float(m_rfErrs * 100U) / float(m_rfBits));
+				LogMessage("P25, received RF end of voice transmission from %s to %s%u, %.1f seconds, BER: %.1f%%", source.c_str(), grp ? "TG " : "", dstId, float(m_rfFrames) / 5.56F, float(m_rfErrs * 100U) / float(m_rfBits));
 
 			m_display->clearP25();
 
@@ -626,6 +614,9 @@ void CP25Control::writeNetwork()
 
 	unsigned int length = m_network->read(data, 100U);
 	if (length == 0U)
+		return;
+
+	if (!m_enabled)
 		return;
 
 	if (m_rfState != RS_RF_LISTENING && m_netState == RS_NET_IDLE)
@@ -1130,7 +1121,9 @@ void CP25Control::createNetTerminator()
 
 	writeQueueNet(buffer, P25_TERM_FRAME_LENGTH_BYTES + 2U);
 
-	LogMessage("P25, network end of transmission, %.1f seconds, %u%% packet loss", float(m_netFrames) / 50.0F, (m_netLost * 100U) / m_netFrames);
+	std::string source = m_lookup->find(m_netData.getSrcId());
+
+	LogMessage("P25, network end of transmission from %s to %s%u, %.1f seconds, %u%% packet loss", source.c_str(), m_netData.getLCF() == P25_LCF_GROUP ? "TG " : "", m_netData.getDstId(), float(m_netFrames) / 50.0F, (m_netLost * 100U) / m_netFrames);
 
 	m_display->clearP25();
 	m_netTimeout.stop();
@@ -1179,4 +1172,29 @@ void CP25Control::closeFile()
 		::fclose(m_fp);
 		m_fp = NULL;
 	}
+}
+
+bool CP25Control::isBusy() const
+{
+	return m_rfState != RS_RF_LISTENING || m_netState != RS_NET_IDLE;
+}
+
+void CP25Control::enable(bool enabled)
+{
+	if (!enabled && m_enabled) {
+		m_queue.clear();
+
+		// Reset the RF section
+		m_rfState = RS_RF_LISTENING;
+		m_rfTimeout.stop();
+		m_rfData.reset();
+
+		// Reset the networking section
+		m_netTimeout.stop();
+		m_networkWatchdog.stop();
+		m_netData.reset();
+		m_netState = RS_NET_IDLE;
+	}
+
+	m_enabled = enabled;
 }

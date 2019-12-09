@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015-2019 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2011-2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,9 +16,20 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(VERSION_H)
-#define	VERSION_H
+#include "NullModem.h"
+#include "Log.h"
 
-const char* VERSION = "20190131";
+CNullModem::CNullModem(const std::string& port, bool duplex, bool rxInvert, bool txInvert, bool pttInvert, unsigned int txDelay, unsigned int dmrDelay, bool trace, bool debug) :
+CModem(port, duplex,rxInvert, txInvert,pttInvert,txDelay, dmrDelay, trace, debug),
+m_hwType(HWT_MMDVM)
+{
+}
 
-#endif
+CNullModem::~CNullModem()
+{
+}
+
+bool CNullModem::open(){
+	::LogMessage("Opening the MMDVM Null Modem");
+	return true;
+}
