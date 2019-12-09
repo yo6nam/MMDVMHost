@@ -58,7 +58,7 @@ bool CDMRAccessControl::blacklistTG(unsigned int slotNo, bool group, unsigned in
 
 	if (id == 0U)
 		return false;
-{
+
 	if (slotNo == 1U) {
 		if (m_slot1TGBlackList.empty())
 			return true;
