@@ -369,6 +369,7 @@ private:
   bool         m_dmrSelfOnly;
   bool         m_dmrEmbeddedLCOnly;
   bool         m_dmrDumpTAData;
+  std::vector<unsigned int> m_dmrPrefixes;
   std::vector<unsigned int> m_dmrMassblock;
   std::vector<unsigned int> m_dmrBlackList;
   std::vector<unsigned int> m_dmrWhiteList;

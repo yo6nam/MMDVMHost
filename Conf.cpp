@@ -561,9 +561,9 @@ bool CConf::read()
 		else if (::strcmp(key, "Massblock") == 0) {
 			char* p = ::strtok(value, ",\r\n");
 			while (p != NULL) {
-				unsigned int prefix = (unsigned int)::atoi(p);
-				if (prefix > 0U && prefix <= 9999999U)
-					m_dmrMassblock.push_back(prefix);
+				unsigned int massblock = (unsigned int)::atoi(p);
+				if (massblock > 0U && massblock <= 9999999U)
+					m_dmrMassblock.push_back(massblock);
 				p = ::strtok(NULL, ",\r\n");
 			}
 		}

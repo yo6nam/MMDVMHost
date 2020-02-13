@@ -1,6 +1,6 @@
 /*
  *   Copyright (C) 2019 by SASANO Takayoshi JG1UAA
- *   Copyright (C) 2015,2016,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2018,2019 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -188,7 +188,7 @@ void CTFTSurenoo::writeDStarInt(const char* my1, const char* my2, const char* yo
 	if (::strcmp(reflector, "        ") != 0)
 		::snprintf(m_temp, sizeof(m_temp), "via %.8s", reflector);
 	else
-		::snprintf(m_temp, sizeof(m_temp), "");
+		::strcpy(m_temp, "");
 	setStatusLine(4, m_temp);
 
 	m_mode = MODE_DSTAR;
@@ -251,7 +251,7 @@ void CTFTSurenoo::writeFusionInt(const char* source, const char* dest, const cha
 	if (::strcmp(origin, "          ") != 0)
 		::snprintf(m_temp, sizeof(m_temp), "at %.10s", origin);
 	else
-		::snprintf(m_temp, sizeof(m_temp), "");
+		::strcpy(m_temp, "");
 	setStatusLine(4, m_temp);
 
 	m_mode = MODE_YSF;
@@ -350,8 +350,10 @@ void CTFTSurenoo::setLineBuffer(char *buf, const char *text, int maxchar)
 {
 	int i;
 
-	for (i = 0; i < maxchar && text[i]; i++) buf[i] = text[i];
-	for (; i < maxchar; i++) buf[i] = ' ';
+	for (i = 0; i < maxchar && text[i] != '\0'; i++)
+		buf[i] = text[i];
+	for (; i < maxchar; i++)
+		buf[i] = ' ';
 	buf[i] = '\0';
 
 	m_refresh = true;
@@ -377,7 +379,7 @@ void CTFTSurenoo::refreshDisplay(void)
 	// mode line
 	::snprintf(m_temp, sizeof(m_temp), "DCV%d(%d,%d,'%s',%d);",
 		   MODE_FONT_SIZE, 0, 0, m_lineBuf, MODE_COLOUR);
-	m_serial->write((unsigned char*)m_temp, ::strlen(m_temp));
+	m_serial->write((unsigned char*)m_temp, (unsigned int)::strlen(m_temp));
 
 	// status line
 	for (int i = 0; i < STATUS_LINES; i++) {
@@ -385,12 +387,12 @@ void CTFTSurenoo::refreshDisplay(void)
 			   STATUS_FONT_SIZE, 0,
 			   STATUS_MARGIN + STATUS_FONT_SIZE * i,
 			   m_lineBuf + statusLine_offset(i), FG_COLOUR);
-		m_serial->write((unsigned char*)m_temp, ::strlen(m_temp));
+		m_serial->write((unsigned char*)m_temp, (unsigned int)::strlen(m_temp));
 	}
 
 	// sending CR+LF finishes commands
 	::snprintf(m_temp, sizeof(m_temp), STR_CRLF);
-	m_serial->write((unsigned char*)m_temp, ::strlen(m_temp));
+	m_serial->write((unsigned char*)m_temp, (unsigned int)::strlen(m_temp));
 
 	m_refresh = false;
 }
@@ -398,7 +400,7 @@ void CTFTSurenoo::refreshDisplay(void)
 void CTFTSurenoo::lcdReset(void)
 {
 	::snprintf(m_temp, sizeof(m_temp), "RESET;" STR_CRLF);
-	m_serial->write((unsigned char*)m_temp, ::strlen(m_temp));
+	m_serial->write((unsigned char*)m_temp, (unsigned int)::strlen(m_temp));
 	CThread::sleep(250);	// document says 230ms
 }
 
@@ -407,7 +409,7 @@ void CTFTSurenoo::clearScreen(unsigned char colour)
 	assert(colour >= 0U && colour <= 63U);
 
 	::snprintf(m_temp, sizeof(m_temp), "CLR(%d);" STR_CRLF, colour);
-	m_serial->write((unsigned char*)m_temp, ::strlen(m_temp));
+	m_serial->write((unsigned char*)m_temp, (unsigned int)::strlen(m_temp));
 	CThread::sleep(100);	// at least 60ms (@240x320 panel)
 }
 
@@ -416,7 +418,7 @@ void CTFTSurenoo::setBackground(unsigned char colour)
 	assert(colour >= 0U && colour <= 63U);
 
 	::snprintf(m_temp, sizeof(m_temp), "SBC(%d);", colour);
-	m_serial->write((unsigned char*)m_temp, ::strlen(m_temp));
+	m_serial->write((unsigned char*)m_temp, (unsigned int)::strlen(m_temp));
 }
 
 void CTFTSurenoo::setRotation(unsigned char rotation)
@@ -424,7 +426,7 @@ void CTFTSurenoo::setRotation(unsigned char rotation)
 	assert(rotation >= 0U && rotation <= 1U);
 
 	::snprintf(m_temp, sizeof(m_temp), "DIR(%d);", rotation);
-	m_serial->write((unsigned char*)m_temp, ::strlen(m_temp));
+	m_serial->write((unsigned char*)m_temp, (unsigned int)::strlen(m_temp));
 }
 
 void CTFTSurenoo::setBrightness(unsigned char brightness)
@@ -432,5 +434,5 @@ void CTFTSurenoo::setBrightness(unsigned char brightness)
 	assert(brightness >= 0U && brightness <= 255U);
 
 	::snprintf(m_temp, sizeof(m_temp), "BL(%d);", brightness);
-	m_serial->write((unsigned char*)m_temp, ::strlen(m_temp));
+	m_serial->write((unsigned char*)m_temp, (unsigned int)::strlen(m_temp));
 }
