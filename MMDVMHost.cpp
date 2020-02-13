@@ -436,6 +436,7 @@ int CMMDVMHost::run()
 		bool embeddedLCOnly         = m_conf.getDMREmbeddedLCOnly();
 		bool dumpTAData             = m_conf.getDMRDumpTAData();
 		std::vector<unsigned int> prefixes  = m_conf.getDMRPrefixes();
+		std::vector<unsigned int> massblock  = m_conf.getDMRMassblock();
 		std::vector<unsigned int> blackList = m_conf.getDMRBlackList();
 		std::vector<unsigned int> whiteList = m_conf.getDMRWhiteList();
 		std::vector<unsigned int> slot1TGBlackList = m_conf.getDMRSlot1TGBlackList();
@@ -467,6 +468,7 @@ int CMMDVMHost::run()
 		LogInfo("    Embedded LC Only: %s", embeddedLCOnly ? "yes" : "no");
 		LogInfo("    Dump Talker Alias Data: %s", dumpTAData ? "yes" : "no");
 		LogInfo("    Prefixes: %u", prefixes.size());
+		LogInfo("    Mass Block: %u", massblock.size());
 
 		if (blackList.size() > 0U)
 			LogInfo("    Source ID Black List: %u", blackList.size());
@@ -523,7 +525,7 @@ int CMMDVMHost::run()
 				break;
 		}
 
-		m_dmr = new CDMRControl(id, colorCode, callHang, selfOnly, embeddedLCOnly, dumpTAData, prefixes, blackList, whiteList, slot1TGBlackList, slot2TGBlackList, slot1TGWhiteList, slot2TGWhiteList, m_timeout, m_modem, m_dmrNetwork, m_display, m_duplex, m_dmrLookup, rssi, jitter, ovcm);
+		m_dmr = new CDMRControl(id, colorCode, callHang, selfOnly, embeddedLCOnly, dumpTAData, prefixes, massblock, blackList, whiteList, slot1TGBlackList, slot2TGBlackList, slot1TGWhiteList, slot2TGWhiteList, m_timeout, m_modem, m_dmrNetwork, m_display, m_duplex, m_dmrLookup, rssi, jitter, ovcm);
 
 		m_dmrTXTimer.setTimeout(txHang);
 	}

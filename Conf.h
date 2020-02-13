@@ -128,6 +128,7 @@ public:
   bool         getDMRDumpTAData() const;
   bool         getDMRSelfOnly() const;
   std::vector<unsigned int> getDMRPrefixes() const;
+  std::vector<unsigned int> getDMRMassblock() const;
   std::vector<unsigned int> getDMRBlackList() const;
   std::vector<unsigned int> getDMRWhiteList() const;
   std::vector<unsigned int> getDMRSlot1TGBlackList() const;
@@ -368,7 +369,7 @@ private:
   bool         m_dmrSelfOnly;
   bool         m_dmrEmbeddedLCOnly;
   bool         m_dmrDumpTAData;
-  std::vector<unsigned int> m_dmrPrefixes;
+  std::vector<unsigned int> m_dmrMassblock;
   std::vector<unsigned int> m_dmrBlackList;
   std::vector<unsigned int> m_dmrWhiteList;
   std::vector<unsigned int> m_dmrSlot1TGBlackList;

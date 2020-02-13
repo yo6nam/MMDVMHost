@@ -37,6 +37,7 @@ private:
 	static std::vector<unsigned int> m_whiteList;
 
 	static std::vector<unsigned int> m_prefixes;
+	static std::vector<unsigned int> m_massblock;
 
 	static std::vector<unsigned int> m_slot1TGBlackList;
 	static std::vector<unsigned int> m_slot2TGBlackList;

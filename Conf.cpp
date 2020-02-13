@@ -139,6 +139,7 @@ m_dmrSelfOnly(false),
 m_dmrEmbeddedLCOnly(false),
 m_dmrDumpTAData(true),
 m_dmrPrefixes(),
+m_dmrMassblock(),
 m_dmrBlackList(),
 m_dmrWhiteList(),
 m_dmrSlot1TGBlackList(),
@@ -556,7 +557,17 @@ bool CConf::read()
 					m_dmrPrefixes.push_back(prefix);
 				p = ::strtok(NULL, ",\r\n");
 			}
-		} else if (::strcmp(key, "BlackList") == 0) {
+		}
+		else if (::strcmp(key, "Massblock") == 0) {
+			char* p = ::strtok(value, ",\r\n");
+			while (p != NULL) {
+				unsigned int prefix = (unsigned int)::atoi(p);
+				if (prefix > 0U && prefix <= 9999999U)
+					m_dmrMassblock.push_back(prefix);
+				p = ::strtok(NULL, ",\r\n");
+			}
+		}
+		else if (::strcmp(key, "BlackList") == 0) {
 			char* p = ::strtok(value, ",\r\n");
 			while (p != NULL) {
 				unsigned int id = (unsigned int)::atoi(p);
@@ -1249,6 +1260,11 @@ bool CConf::getDMRDumpTAData() const
 std::vector<unsigned int> CConf::getDMRPrefixes() const
 {
 	return m_dmrPrefixes;
+}
+
+std::vector<unsigned int> CConf::getDMRMassblock() const
+{
+	return m_dmrMassblock;
 }
 
 std::vector<unsigned int> CConf::getDMRBlackList() const

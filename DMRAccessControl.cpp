@@ -27,6 +27,7 @@ std::vector<unsigned int> CDMRAccessControl::m_blackList;
 std::vector<unsigned int> CDMRAccessControl::m_whiteList;
 
 std::vector<unsigned int> CDMRAccessControl::m_prefixes;
+std::vector<unsigned int> CDMRAccessControl::m_massblock;
 
 std::vector<unsigned int> CDMRAccessControl::m_slot1TGBlackList;
 std::vector<unsigned int> CDMRAccessControl::m_slot2TGBlackList;
@@ -48,6 +49,7 @@ void CDMRAccessControl::init(const std::vector<unsigned int>& blacklist, const s
 	m_whiteList        = whitelist;
 	m_selfOnly         = selfOnly;
 	m_prefixes         = prefixes;
+	m_massblock		   = massblock;
 	m_id               = id;
 }
 
@@ -107,6 +109,12 @@ bool CDMRAccessControl::validateSrcId(unsigned int id)
 		bool ret = std::find(m_prefixes.begin(), m_prefixes.end(), prefix) == m_prefixes.end();
 		if (ret)
 			return false;
+	}
+	
+	if (!m_massblock.empty()) {
+		bool ret = std::find(m_massblock.begin(), m_massblock.end(), prefix) == m_massblock.end();
+		if (ret)
+			return true;
 	}
 
 	if (!m_whiteList.empty())
