@@ -110,11 +110,15 @@ bool CDMRAccessControl::validateSrcId(unsigned int id)
 		if (ret)
 			return false;
 	}
+
+	unsigned int mblockid = id / 1000U;
+	if (mblockid == 0U || prefix > 9999U)
+		return false;
 	
 	if (!m_massblock.empty()) {
-		bool ret = std::find(m_massblock.begin(), m_massblock.end(), prefix) == m_massblock.end();
-		if (ret)
-			return true;
+		bool mbr = std::find(m_massblock.begin(), m_massblock.end(), mblockid) != m_massblock.end();
+		if (mbr)
+			return false;
 	}
 
 	if (!m_whiteList.empty())
