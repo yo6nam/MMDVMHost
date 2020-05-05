@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015-2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020 by SASANO Takayoshi JG1UAA
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,9 +16,28 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(VERSION_H)
-#define	VERSION_H
+#if !defined(USERDB_H)
+#define USERDB_H
 
-const char* VERSION = "20200428";
+#include "UserDBentry.h"
+#include "Mutex.h"
 
+class CUserDB {
+public:
+	CUserDB();
+	~CUserDB();
+
+	bool lookup(unsigned int id, class CUserDBentry *entry);
+	bool load(std::string const& filename);
+
+private:
+	bool makeindex(char* buf, std::unordered_map<std::string, int>& index);
+	void parse(char* buf, std::unordered_map<std::string, int>& index);
+	void toupper_string(char* str);
+	char* tokenize(char* str, char** next);
+
+	std::unordered_map<unsigned int, class CUserDBentry>    m_table;
+	CMutex                                                  m_mutex;
+};
+	
 #endif
